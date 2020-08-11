@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useEffect } from "react";
 import {
   Segment,
   Header,
@@ -6,11 +6,15 @@ import {
   Form,
   Dropdown,
   DropdownItemProps,
+  DropdownProps,
   Input,
 } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 import { CurrencyExchangeState } from "../store/exchange/types";
-import { toggleModeAction } from "../store/exchange/actions";
+import {
+  toggleModeAction,
+  switchCurrencyAction,
+} from "../store/exchange/actions";
 import { ModeToggle } from "./ModeToggle";
 import { RootState } from "../store";
 
@@ -31,8 +35,9 @@ export const Exchange = () => {
   // const selectCurrentCurrency = (state: CurrencyExchangeState) => state.currencyExchangeReducer.currentCurrency
   // const currentCurrency = useSelector(selectCurrentCurrency)
 
-  console.log(currentCurrency); // undefined
   const dispatch = useDispatch();
+
+  console.log(currentCurrency); // undefined
 
   const [sum, setSum] = React.useState("");
   const updateSum = (event: ChangeEvent<HTMLInputElement>) => {
@@ -41,14 +46,26 @@ export const Exchange = () => {
 
   const onToggleMode = (newMode: string) => {
     dispatch(toggleModeAction(newMode));
-    console.log(dispatch);
   };
+
+  const onDropDownChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
+    if (data.value !== undefined) {
+      dispatch(switchCurrencyAction(data.value.toString()));
+    }
+  };
+
+  useEffect(() => {
+    fetch(`https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5`)
+      .then((response) => response.json())
+      .then((data) => console.log(data));
+  }, []);
 
   return (
     <Segment>
-      <Header fluid as="h3">
-        Currency Exchange : {currentCurrency}
-      </Header>
+      <Header as="h3">Currency Exchange : {currentCurrency}</Header>
       <Form>
         <Form.Group widths="equal">
           <Form.Field>
@@ -64,6 +81,7 @@ export const Exchange = () => {
               <Dropdown
                 defaultValue={currentCurrency}
                 options={currencyOptions}
+                onChange={onDropDownChange}
               />
             }
             labelPosition="right"
